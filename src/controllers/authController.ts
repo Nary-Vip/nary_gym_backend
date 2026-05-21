@@ -133,6 +133,7 @@ export const login = asyncHandler(async (
       name: user.name,
       email: user.email,
       phone: user.phone,
+      profile: user.profile
     }
   });
 });

@@ -13,10 +13,6 @@ export const createWorkoutSchema = z.object({
     WorkOutType.BACK,
     WorkOutType.SHOULDER
   ]),
-
-  workOutImage: z
-    .string()
-    .min(1)
 });
 
 export const updateWorkoutSchema =

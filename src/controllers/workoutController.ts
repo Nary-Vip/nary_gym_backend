@@ -3,12 +3,27 @@ import { Request, Response } from "express";
 import Workout from "../models/Workout";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import asyncHandler from "../utils/asyncHandler";
+import cloudinary from "../config/cloudinary";
+import streamifier from "streamifier";
+
+const uploadToCloudinary = (buffer: Buffer): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "gym-app/workouts" },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result!.secure_url);
+      }
+    );
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+};
 
 export const getAllWorkouts = asyncHandler(async (
   req: Request,
   res: Response
 ) => {
-  const page = Number(req.query.page ?? 0)
+  const page = Number(req.query.page ?? 1)
 
   const limit = Number(req.query.limit) || 10
   const skip = limit * (page - 1)
@@ -47,10 +62,18 @@ export const getAllWorkouts = asyncHandler(async (
 export const createWorkout = asyncHandler(async (
   req: Request, res: Response) => {
 
+  let workOutImage = null;
 
-  const workout = await Workout.create(req.body)
+  if (!req.file) {
+    workOutImage = await uploadToCloudinary(req.file!.buffer);
+  }
 
-  return res.status(200).json({ message: "Workout created successfully", workout })
+  const workout = await Workout.create({
+    ...req.body,
+    workOutImage
+  })
+
+  return res.status(201).json({ message: "Workout created successfully", workout })
 });
 
 export const updateWorkout = asyncHandler(async (
@@ -59,11 +82,16 @@ export const updateWorkout = asyncHandler(async (
 ) => {
   const { id } = req.params;
 
+  const updateData: any = { ...req.body };
+
+  if (req.file) {
+    updateData.workOutImage = await uploadToCloudinary(req.file.buffer);
+  }
 
   const updatedWorkout =
     await Workout.findByIdAndUpdate(
       id,
-      req.body,
+      updateData,
       {
         new: true,
         runValidators: true
