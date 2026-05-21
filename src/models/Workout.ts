@@ -1,5 +1,18 @@
 import mongoose from "mongoose";
 
+export enum WorkOutType {
+  LEG = "LEG",
+  CHEST = "CHEST",
+  BACK = "BACK",
+  SHOULDER = "SHOULDER"
+}
+
+export interface IWorkout {
+  workOutName: string;
+  workOutType: WorkOutType;
+  workOutImage: string;
+}
+
 const workoutSchema = new mongoose.Schema(
   {
     workOutName: {
@@ -9,12 +22,7 @@ const workoutSchema = new mongoose.Schema(
 
     workOutType: {
       type: String,
-      enum: [
-        "LEG",
-        "CHEST",
-        "BACK",
-        "SHOULDER"
-      ],
+      enum: Object.values(WorkOutType),
       required: true
     },
 

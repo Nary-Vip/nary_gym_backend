@@ -1,14 +1,13 @@
 import express from "express";
 
-import authMiddleware from "../middlewares/authMiddleware";
+import authMiddleware from "./authMiddleware";
 
 import {
-  createWorkout,
   getAllWorkouts,
-  updateWorkout
+  createWorkout,
+  updateWorkout,
+  deleteWorkout
 } from "../controllers/workoutController";
-import { createWorkoutSchema, updateWorkoutSchema } from "../validators/workoutValidator";
-import validate from "../middlewares/validator";
 
 const router = express.Router();
 
@@ -21,24 +20,20 @@ router.get(
 router.post(
   "/",
   authMiddleware,
-  validate(createWorkoutSchema),
   createWorkout
 );
 
 router.put(
   "/:id",
   authMiddleware,
-  validate(updateWorkoutSchema),
   updateWorkout
 );
-
 
 router.delete(
   "/:id",
   authMiddleware,
-  updateWorkout
+  deleteWorkout
 );
-
 
 
 export default router;
