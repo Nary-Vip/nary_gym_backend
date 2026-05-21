@@ -118,3 +118,48 @@ export const login = asyncHandler(async (
     }
   });
 });
+
+export const refreshToken = asyncHandler(async (
+  req: Request,
+  res: Response
+) => {
+  const { refreshToken } = req.body;
+
+  // Verify signature first
+  const decoded = jwt.verify(
+    refreshToken,
+    process.env.REFRESH_SECRET as string
+  ) as { userId: string };
+
+  // Then check it matches what's stored in DB
+  const user = await User.findById(decoded.userId);
+  if (!user || user.refreshToken !== refreshToken) {
+    return res.status(401).json({ message: "Invalid refresh token" });
+  }
+
+  // Rotate — issue new both tokens
+  const newAccessToken = generateAccessToken(user.id);
+  const newRefreshToken = generateRefreshToken(user.id);
+
+  user.refreshToken = newRefreshToken;
+  await user.save();
+
+  return res.status(200).json({
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  });
+});
+
+export const logout = asyncHandler(async (
+  req: Request,
+  res: Response
+) => {
+  const { refreshToken } = req.body;
+
+  await User.findOneAndUpdate(
+    { refreshToken },
+    { refreshToken: null }
+  );
+
+  return res.status(200).json({ message: "Logged out successfully" });
+});

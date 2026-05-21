@@ -32,7 +32,7 @@ const validate = (
       if (error instanceof ZodError) {
 
         return res.status(400).json({
-          errors: error.message
+          errors: error.issues
         });
       }
 
@@ -44,3 +44,11 @@ const validate = (
 };
 
 export default validate;
+
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, "Refresh token is required"),
+});
+
+export const logoutSchema = z.object({
+  refreshToken: z.string().min(1, "Refresh token is required"),
+});
