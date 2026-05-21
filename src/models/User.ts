@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    profile: {
+      type: String,
+      required: false
+    },
     refreshToken: { type: String, default: null },
   },
   {

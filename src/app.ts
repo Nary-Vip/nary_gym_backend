@@ -10,11 +10,12 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-// Error Middleware
-app.use(errorMiddleware);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/workouts", workoutRoutes);
 app.use("/api/upload", uploadRoutes);
+
+// Error Middleware
+app.use(errorMiddleware);
 
 export default app;

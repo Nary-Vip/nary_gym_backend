@@ -52,3 +52,10 @@ export const refreshTokenSchema = z.object({
 export const logoutSchema = z.object({
   refreshToken: z.string().min(1, "Refresh token is required"),
 });
+
+export const updateAccountSchema = z.object({
+  name: z.string().min(1).optional(),
+  phone: z.string().min(1).optional(),
+}).refine(data => Object.keys(data).length > 0, {
+  message: "At least one field must be provided"
+});

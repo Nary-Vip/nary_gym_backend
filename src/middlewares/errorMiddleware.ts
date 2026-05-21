@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import AppError from "../utils/AppError";
+import multer from "multer";
 
 const errorMiddleware = (
   err: Error,
@@ -12,6 +13,13 @@ const errorMiddleware = (
     return res.status(err.statusCode).json({
       message: err.message
     });
+  }
+  
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ message: "Image size must be under 5MB" });
+    }
+    return res.status(400).json({ message: err.message });
   }
 
   if (err instanceof TokenExpiredError) {

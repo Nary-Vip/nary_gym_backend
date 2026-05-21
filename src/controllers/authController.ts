@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import streamifier from "streamifier";
 
 import User from "../models/User";
 import asyncHandler from "../utils/asyncHandler";
+import cloudinary from "../config/cloudinary";
 
 const generateAccessToken = (userId: string) => {
   return jwt.sign(
@@ -45,11 +47,27 @@ export const createAccount = asyncHandler(async (
   const hashedPassword =
     await bcrypt.hash(password, 10);
 
+  let profileImage: string | null = null;
+  if (req.file) {
+    const result = await new Promise<any>((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "gym-app/profiles" },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      streamifier.createReadStream(req.file!.buffer).pipe(stream);
+    });
+    profileImage = result.secure_url;
+  }
+
   const user = await User.create({
     name,
     email,
     phone,
-    password: hashedPassword
+    password: hashedPassword,
+    profile: profileImage,
   });
 
   const accessToken = generateAccessToken(user.id);
@@ -162,4 +180,50 @@ export const logout = asyncHandler(async (
   );
 
   return res.status(200).json({ message: "Logged out successfully" });
+});
+
+export const updateAccount = asyncHandler(async (
+  req: Request,
+  res: Response
+) => {
+  const userId = req.userId;
+  const { name, phone } = req.body;
+
+  if (!name && !phone && !req.file) {
+    return res.status(400).json({ message: "At least one field must be provided" });
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  if (name) user.name = name;
+  if (phone) user.phone = phone;
+
+  if (req.file) {
+    const result = await new Promise<any>((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "gym-app/profiles" },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      streamifier.createReadStream(req.file!.buffer).pipe(stream);
+    });
+    user.profile = result.secure_url;
+  }
+
+  await user.save();
+
+  return res.status(200).json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      profileImage: user.profile,
+    },
+  });
 });
