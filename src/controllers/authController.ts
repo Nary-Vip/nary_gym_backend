@@ -11,7 +11,7 @@ const generateAccessToken = (userId: string) => {
   return jwt.sign(
     { userId },
     process.env.JWT_SECRET as string,
-    { expiresIn: "15m" }
+    { expiresIn: "1m" }
   );
 };
 
@@ -77,13 +77,16 @@ export const createAccount = asyncHandler(async (
   await user.save();
 
   res.status(201).json({
-    accessToken,
-    refreshToken,
+    "token": {
+      accessToken,
+      refreshToken,
+    },
     user: {
       id: user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,
+      profileImage: profileImage
     }
   });
 });
@@ -126,14 +129,16 @@ export const login = asyncHandler(async (
   await user.save();
 
   res.json({
-    accessToken,
-    refreshToken,
+    "token": {
+      accessToken,
+      refreshToken,
+    },
     user: {
       id: user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,
-      profile: user.profile
+      profileImage: user.profile
     }
   });
 });
@@ -180,6 +185,8 @@ export const logout = asyncHandler(async (
     { refreshToken: null }
   );
 
+  console.log("Logged off")
+
   return res.status(200).json({ message: "Logged out successfully" });
 });
 
@@ -189,6 +196,16 @@ export const updateAccount = asyncHandler(async (
 ) => {
   const userId = req.userId;
   const { name, phone } = req.body;
+
+  if (
+    !name &&
+    !phone &&
+    !req.file
+  ) {
+    return res.status(400).json({
+      message: "At least one field must be provided"
+    });
+  }
 
   if (!name && !phone && !req.file) {
     return res.status(400).json({ message: "At least one field must be provided" });
@@ -226,5 +243,31 @@ export const updateAccount = asyncHandler(async (
       phone: user.phone,
       profileImage: user.profile,
     },
+  });
+});
+
+export const getUser = asyncHandler(async (
+  req: Request,
+  res: Response
+) => {
+
+  const userId = req.userId;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found"
+    });
+  }
+
+  return res.status(200).json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      profileImage: user.profile
+    }
   });
 });

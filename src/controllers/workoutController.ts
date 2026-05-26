@@ -46,7 +46,7 @@ export const getAllWorkouts = asyncHandler(async (
   const totalWorkouts = await Workout.countDocuments();
 
   const workouts =
-    (await Workout.find(query).limit(10).skip(skip).lean());
+    (await Workout.find(query).limit(limit).skip(skip).lean());
 
   const totalPages = Math.ceil(totalWorkouts / limit);
 
@@ -64,7 +64,7 @@ export const createWorkout = asyncHandler(async (
 
   let workOutImage = null;
 
-  if (!req.file) {
+  if (req.file) {
     workOutImage = await uploadToCloudinary(req.file!.buffer);
   }
 
