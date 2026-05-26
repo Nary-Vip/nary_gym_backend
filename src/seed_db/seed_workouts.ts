@@ -107,8 +107,7 @@ const workouts = [
 const seedWorkouts = async () => {
   try {
     await mongoose.connect(
-        
-        "mongodb+srv://rmnareshkumar001_db_user:Nary001@narygymcluster.gsi9t4b.mongodb.net/?appName=NaryGymCluster"
+        ""
     );
 
     console.log("MongoDB connected");
